@@ -2,6 +2,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const startButton = document.getElementById('startButton');
     const resultContainer = document.getElementById('resultContainer');
     const container = document.querySelector('.container');
+    const title = document.querySelector('h1');
+    const subtitle = document.getElementById('subtitle');
+    const footer = document.querySelector('.footer');
+    
+    // 检测设备类型
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // 根据设备类型设置标题和副标题
+    if (isMobile) {
+        title.textContent = '手机状态检测器';
+        document.title = '手机状态检测器';
+        subtitle.textContent = '使用先进的大数据技术分析您的手机状态';
+        footer.textContent = '© 2025 移动设备健康检测中心 | 使用先进的大数据技术';
+    } else {
+        title.textContent = '电脑开机状态检测器';
+        document.title = '电脑开机状态检测器';
+        subtitle.textContent = '使用先进的大数据技术分析您的电脑状态';
+        footer.textContent = '© 2025 电脑健康检测中心 | 使用先进的大数据技术';
+    }
     
     // 初始化时隐藏结果容器
     resultContainer.classList.add('hidden');
@@ -77,10 +96,15 @@ document.addEventListener('DOMContentLoaded', function() {
             successMessage.className = 'success-message';
             successMessage.textContent = '检测完成';
             
-            // 创建详细信息
+            // 创建详细信息 - 根据设备类型显示不同内容
             const successDetails = document.createElement('div');
             successDetails.className = 'success-details';
-            successDetails.textContent = '恭喜你，你的电脑当前为开机状态！';
+            
+            if (isMobile) {
+                successDetails.textContent = '恭喜你，你的手机当前可以正常使用！';
+            } else {
+                successDetails.textContent = '恭喜你，你的电脑当前为开机状态！';
+            }
             
             // 清空并添加新内容
             resultContainer.innerHTML = '';
