@@ -1,497 +1,61 @@
 <!DOCTYPE html>
+
 <html lang="zh-CN">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>电脑开机状态检测器</title>
+
     <link rel="stylesheet" href="styles.css">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
 </head>
+
 <body>
+
     <div class="container">
+
         <h1>电脑开机状态检测器</h1>
+
         <div class="subtitle" id="subtitle">使用先进的大数据技术分析您的电脑状态</div>
+
         
+
         <div class="button-container">
+
             <button class="start-button" id="startButton">开始检测</button>
+
         </div>
+
         
+
         <div class="result-container hidden" id="resultContainer">
+
             恭喜你，你的电脑当前为开机状态！
+
         </div>
+
         
+
         <div class="footer">
+
             © 2025 电脑健康检测中心 | 使用先进的大数据技术
+
         </div>
+
     </div>
+
+
 
     <script src="script.js"></script>
+
 </body>
-</html>             position: relative;
-            z-index: 15; /* 低于结果层 */
-        }
 
-        /* 终端头部 */
-        .terminal-header {
-            padding: 10px 16px;
-            background: #18181b;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .terminal-dots {
-            display: flex;
-            gap: 6px;
-        }
-        .dot { width: 10px; height: 10px; border-radius: 50%; }
-        .dot-red { background: #ef4444; }
-        .dot-yellow { background: #eab308; }
-        .dot-green { background: #22c55e; }
-
-        /* 终端内容区 */
-        .terminal-body {
-            padding: 16px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: #a1a1aa; /* Zinc 400 */
-            height: 280px;
-            overflow-y: auto;
-            line-height: 1.6;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-        }
-        
-        /* 隐藏滚动条 */
-        .terminal-body::-webkit-scrollbar { width: 4px; }
-        .terminal-body::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
-
-        .log-line { margin-bottom: 4px; display: block; word-break: break-all; }
-        .log-success { color: #34d399; } 
-        .log-warn { color: #facc15; }
-        .log-error { color: #f87171; }
-        .log-info { color: #60a5fa; }
-        .log-highlight { color: #fff; font-weight: bold; }
-        
-        .cursor { 
-            display: inline-block; 
-            width: 8px; 
-            height: 14px; 
-            background: #34d399; 
-            animation: blink 1s step-end infinite; 
-            vertical-align: middle; 
-            margin-left: 4px;
-        }
-
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-        /* 进度条 */
-        .progress-track {
-            width: 100%;
-            height: 2px;
-            background: #27272a;
-            position: relative;
-        }
-        .progress-bar {
-            width: 0%;
-            height: 100%;
-            background: #10b981;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
-            transition: width 0.1s linear;
-        }
-
-        /* 结果状态层 */
-        .status-badge {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.8);
-            opacity: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* 关键修复：默认不接受鼠标事件，防止遮挡，显示时再由 JS 开启 */
-            pointer-events: none; 
-            z-index: 50; /* 最高的 z-index */
-            width: 100%;
-        }
-        .check-circle {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: rgba(16, 185, 129, 0.1);
-            border: 2px solid #10b981;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            box-shadow: 0 0 40px rgba(16, 185, 129, 0.3);
-        }
-        .check-circle svg {
-            width: 45px;
-            height: 45px;
-            color: #10b981;
-        }
-        
-        /* 重新检测按钮样式 */
-        .retry-button-style {
-            padding: 8px 24px;
-            border-radius: 9999px;
-            border: 1px solid #3f3f46;
-            color: #a1a1aa;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-            cursor: pointer;
-            background: rgba(0,0,0,0.2);
-            backdrop-filter: blur(4px);
-        }
-        
-        .retry-button-style:hover {
-            color: #ffffff;
-            border-color: #ffffff;
-            background: rgba(255,255,255,0.1);
-            box-shadow: 0 0 15px rgba(255,255,255,0.1);
-        }
-
-    </style>
-</head>
-<body>
-
-    <div class="ambient-light" id="ambientLight"></div>
-
-    <div class="main-container">
-        <!-- 按钮区域 -->
-        <div style="height: 60px; display: flex; align-items: center; justify-content: center; width: 100%;">
-            <button class="scan-btn" id="startBtn">
-                <span id="btnText">执行系统诊断</span>
-                <!-- 加载圈 -->
-                <svg id="spinner" class="animate-spin hidden w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </button>
-        </div>
-
-        <!-- 终端面板 -->
-        <div class="terminal-panel" id="terminal">
-            <div class="terminal-header">
-                <div class="terminal-dots">
-                    <div class="dot dot-red"></div>
-                    <div class="dot dot-yellow"></div>
-                    <div class="dot dot-green"></div>
-                </div>
-                <div class="text-xs text-zinc-500 font-mono">root@local-diagnostic:~</div>
-                <div class="text-xs text-zinc-600 font-mono" id="headerTime">--:--:--</div>
-            </div>
-            
-            <div class="progress-track">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-
-            <div class="terminal-body" id="consoleOutput">
-                <!-- 日志区域 -->
-            </div>
-        </div>
-
-        <!-- 最终结果 -->
-        <div class="status-badge" id="resultBadge">
-            <div class="check-circle">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-            <div class="text-3xl font-bold text-white tracking-wide mb-1">SYSTEM ONLINE</div>
-            <div class="text-sm text-emerald-400 font-mono mb-8">所有核心指标检测正常 | 设备已激活</div>
-            
-            <!-- 重新检测按钮 -->
-            <button id="retryBtn" class="retry-button-style">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 21h5v-5"></path></svg>
-                重新检测
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // DOM 元素
-        const startBtn = document.getElementById('startBtn');
-        const btnText = document.getElementById('btnText');
-        const spinner = document.getElementById('spinner');
-        const terminal = document.getElementById('terminal');
-        const consoleOutput = document.getElementById('consoleOutput');
-        const progressBar = document.getElementById('progressBar');
-        const resultBadge = document.getElementById('resultBadge');
-        const retryBtn = document.getElementById('retryBtn');
-        const ambientLight = document.getElementById('ambientLight');
-        const headerTime = document.getElementById('headerTime');
-
-        let timeInterval;
-
-        // 获取真实的显卡信息
-        function getWebglInfo() {
-            try {
-                const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                if (!gl) return { renderer: "Unknown GPU", vendor: "Unknown Vendor" };
-                
-                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                if (!debugInfo) return { renderer: "Generic WebGL GPU", vendor: "Unknown" };
-
-                const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-                const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-                
-                return { vendor, renderer };
-            } catch (e) {
-                return { renderer: "Integrated Graphics", vendor: "System" };
-            }
-        }
-
-        // 获取真实系统信息
-        function getSysInfo() {
-            const ua = navigator.userAgent;
-            const gpuInfo = getWebglInfo();
-            
-            // 简单的OS解析
-            let os = "Unknown OS";
-            if (ua.indexOf("Win") !== -1) os = "Windows";
-            if (ua.indexOf("Mac") !== -1) os = "macOS";
-            if (ua.indexOf("Linux") !== -1) os = "Linux";
-            if (ua.indexOf("Android") !== -1) os = "Android";
-            if (ua.indexOf("iPhone") !== -1 || ua.indexOf("iPad") !== -1) os = "iOS";
-
-            // 浏览器
-            let browser = "Unknown Browser";
-            if (ua.indexOf("Chrome") !== -1) browser = "Chrome";
-            if (ua.indexOf("Firefox") !== -1) browser = "Firefox";
-            if (ua.indexOf("Safari") !== -1 && ua.indexOf("Chrome") === -1) browser = "Safari";
-            if (ua.indexOf("Edge") !== -1) browser = "Edge";
-
-            return {
-                os: os,
-                browser: browser,
-                cores: navigator.hardwareConcurrency || "Unknown",
-                memory: navigator.deviceMemory ? `~${navigator.deviceMemory} GB` : "Unknown",
-                screen: `${window.screen.width}x${window.screen.height} (${window.screen.colorDepth}-bit)`,
-                gpu: gpuInfo.renderer,
-                lang: navigator.language,
-                online: navigator.onLine ? "Connected" : "Offline",
-                ua: ua
-            };
-        }
-
-        // 更新头部时间
-        function startTimeUpdate() {
-            const update = () => {
-                const now = new Date();
-                headerTime.innerText = now.toLocaleTimeString('en-US', { hour12: false });
-            };
-            update();
-            timeInterval = setInterval(update, 1000);
-        }
-
-        // 格式化日志
-        function createLog(text, type = 'normal') {
-            const now = new Date();
-            const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}.${now.getMilliseconds().toString().padStart(3,'0').slice(0,2)}`;
-            let className = '';
-            
-            if (type === 'success') className = 'log-success';
-            else if (type === 'warn') className = 'log-warn';
-            else if (type === 'error') className = 'log-error';
-            else if (type === 'info') className = 'log-info';
-            else if (type === 'highlight') className = 'log-highlight';
-
-            return `<span class="text-zinc-600 mr-2">[${timeStr}]</span><span class="${className}">${text}</span>`;
-        }
-
-        // 主逻辑
-        async function startDiagnostic() {
-            // 锁定开始按钮
-            startBtn.disabled = true;
-            
-            // 1. 按钮变形动画
-            const tl = gsap.timeline();
-            
-            tl.to(btnText, { opacity: 0, duration: 0.2, display: 'none' })
-              .to(startBtn, { 
-                  width: 50, 
-                  height: 50,
-                  padding: 0, 
-                  borderRadius: '50%',
-                  backgroundColor: '#18181b', // Zinc 900
-                  borderColor: '#27272a',
-                  duration: 0.4, 
-                  ease: "power2.inOut",
-                  onComplete: () => spinner.classList.remove('hidden')
-              })
-              .to(terminal, {
-                  height: 320,
-                  opacity: 1,
-                  duration: 0.5,
-                  marginTop: 30,
-                  ease: "power2.out"
-              });
-
-            startTimeUpdate();
-            
-            // 准备真实数据
-            const sys = getSysInfo();
-            
-            // 生成日志队列
-            const steps = [
-                { msg: "Initializing boot kernel...", delay: 200 },
-                { msg: "Mounting virtual file system...", delay: 300 },
-                { msg: `Detecting User Agent: <span class="log-info">${sys.ua.substring(0, 40)}...</span>`, delay: 500 },
-                { msg: `Identified OS Environment: <span class="log-highlight">${sys.os}</span>`, delay: 400 },
-                { msg: `Browser Core: <span class="log-highlight">${sys.browser}</span>`, delay: 300 },
-                { msg: "Probing CPU architecture...", delay: 600 },
-                { msg: `CPU Threads: <span class="log-highlight">${sys.cores} Logical Cores</span> active`, delay: 400 },
-                { msg: `System Memory (Est.): <span class="log-highlight">${sys.memory}</span>`, delay: 300 },
-                { msg: "Initializing Graphics Interface...", delay: 500 },
-                { msg: `GPU Renderer: <span class="log-highlight">${sys.gpu}</span>`, delay: 800 },
-                { msg: `Display Output: <span class="log-highlight">${sys.screen}</span>`, delay: 300 },
-                { msg: `Network Status: <span class="log-success">${sys.online}</span>`, delay: 200 },
-                { msg: `Locale Settings: ${sys.lang}`, delay: 200 },
-                { msg: "Running heuristic analysis...", delay: 1000 },
-                { msg: "Verifying power delivery...", delay: 400 },
-                { msg: "System integrity check passed.", delay: 300, type: 'success' },
-                { msg: "DIAGNOSTIC COMPLETE. SYSTEM IS ACTIVE.", delay: 500, type: 'success' }
-            ];
-
-            let totalDelay = steps.reduce((sum, step) => sum + step.delay, 0);
-            let currentDelay = 0;
-
-            // 清空控制台
-            consoleOutput.innerHTML = `<div><span class="cursor"></span></div>`;
-
-            // 异步打印日志
-            for (let i = 0; i < steps.length; i++) {
-                const step = steps[i];
-                await new Promise(r => setTimeout(r, step.delay));
-                
-                const p = document.createElement('div');
-                p.className = 'log-line';
-                p.innerHTML = createLog(step.msg, step.type || 'normal');
-                
-                // 插入到光标之前
-                consoleOutput.insertBefore(p, consoleOutput.lastElementChild);
-                
-                // 自动滚动
-                consoleOutput.scrollTop = consoleOutput.scrollHeight;
-
-                // 进度条更新
-                currentDelay += step.delay;
-                const progress = Math.min((currentDelay / totalDelay) * 100, 100);
-                progressBar.style.width = `${progress}%`;
-            }
-
-            // 完成动画
-            finishDiagnostic();
-        }
-
-        function finishDiagnostic() {
-            clearInterval(timeInterval);
-            
-            const tl = gsap.timeline();
-
-            // 1. 收起终端
-            tl.to(terminal, {
-                opacity: 0,
-                y: 20,
-                duration: 0.5,
-                ease: "power2.in",
-                pointerEvents: 'none' // 动画结束后禁用终端点击
-            })
-            // 2. 隐藏开始按钮
-            .to(startBtn, {
-                scale: 0,
-                duration: 0.3
-            }, "<")
-            // 3. 背景光变色
-            .to(ambientLight, {
-                background: "radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, rgba(0, 0, 0, 0) 70%)",
-                duration: 1
-            }, "<")
-            // 4. 显示结果并启用点击
-            .to(resultBadge, {
-                opacity: 1,
-                scale: 1,
-                duration: 0.6,
-                ease: "elastic.out(1, 0.6)",
-                onStart: () => {
-                    // 确保在显示的一瞬间开启交互
-                    resultBadge.style.pointerEvents = 'auto';
-                }
-            });
-        }
-
-        // 重置函数
-        function resetUI() {
-            // 防止重复点击
-            retryBtn.style.pointerEvents = 'none';
-            
-            const tl = gsap.timeline();
-
-            // 1. 隐藏结果
-            tl.to(resultBadge, {
-                opacity: 0,
-                scale: 0.8,
-                duration: 0.3,
-                pointerEvents: 'none' // 再次禁用点击，防止动画中误触
-            })
-            // 2. 恢复背景
-            .to(ambientLight, {
-                background: "radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(0, 0, 0, 0) 70%)",
-                duration: 0.5
-            }, "<")
-            // 3. 恢复终端位置（但不显示）
-            .set(terminal, {
-                y: 0,
-                height: 0,
-                marginTop: 24,
-                opacity: 0
-            })
-            // 4. 重置进度条
-            .set(progressBar, { width: '0%' })
-            // 5. 恢复按钮
-            .to(startBtn, {
-                scale: 1,
-                width: 'auto', // 恢复自适应宽度
-                height: 'auto',
-                padding: '16px 48px',
-                borderRadius: '9999px',
-                backgroundColor: 'transparent',
-                borderColor: 'rgba(255,255,255,0.1)',
-                duration: 0.5,
-                ease: "power2.out",
-                clearProps: "all"
-            })
-            .add(() => {
-                // 恢复文字和隐藏 spinner
-                spinner.classList.add('hidden');
-                btnText.style.display = 'block';
-                btnText.style.opacity = '1';
-                startBtn.disabled = false;
-                
-                // 恢复 retry 按钮，以备下次使用
-                retryBtn.style.pointerEvents = 'auto';
-            });
-        }
-
-        startBtn.addEventListener('click', startDiagnostic);
-        
-        // 使用更稳健的事件绑定，确保不会因样式问题无法触发
-        retryBtn.onclick = function(e) {
-            e.preventDefault(); // 防止可能的默认行为
-            resetUI();
-        };
-
-    </script>
-</body>
 </html>
-
